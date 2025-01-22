@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/github_analyzer}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/githubanalyzer}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
     password: ${SPRING_DATASOURCE_PASSWORD:postgres}
     driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:org.postgresql.Driver}
@@ -17,6 +17,7 @@ spring:
       org.hibernate: ERROR
       org.hibernate.SQL: OFF
       org.hibernate.type.descriptor.sql: OFF
+      com.toulios.githubanalyzer: DEBUG 
 
   flyway:
     enabled: ${FLYWAY_ENABLED:true}
@@ -27,6 +28,14 @@ spring:
     validate-on-migrate: true
     clean-disabled: true
     patterns: ${FLYWAY_PATTERNS:V*__*.sql}
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    topics:
+      repo-changes: ${KAFKA_TOPIC_REPO_CHANGES:repo-changes}  # default value if not overridden
 
 github:
   api:
@@ -52,10 +61,6 @@ springdoc:
 app:
   scheduler:
     fixed-rate: ${SCHEDULER_RATE:300000}  # 5 minutes in milliseconds
-
-logging:
-  level:
-    com.toulios.githubanalyzer: DEBUG 
 
 resilience4j:
   ratelimiter:

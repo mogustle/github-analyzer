@@ -5,15 +5,16 @@ GitHub Repository Analyzer is a Spring Boot application that helps track and ana
 
 ## Technical Stack
 
-| Category | Technologies |
-|----------|--------------|
-| Core | Java 17, Spring Boot 3.x |
-| Database | PostgreSQL 15, Spring Data JPA, Flyway |
-| Documentation | OpenAPI/Swagger 3.0 |
-| Monitoring | Zipkin |
-| Tools | Docker, Maven, Lombok |
-| Testing | JUnit 5 |
-| Rate Limiting | Resilience4j |
+| Category      | Technologies                           |
+|---------------|----------------------------------------|
+| Core          | Java 17, Spring Boot 3.x               |
+| Database      | PostgreSQL 15, Spring Data JPA, Flyway |
+| Documentation | OpenAPI/Swagger 3.0                    |
+| Monitoring    | Zipkin                                 |
+| Tools         | Docker, Maven, Lombok                  |
+| Testing       | JUnit 5                                |
+| Rate Limiting | Resilience4j                           |
+| Messaging     | Kafka                                  |
 
 ## Features
 - Fetch and analyze GitHub repository details
