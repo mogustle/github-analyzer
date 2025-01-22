@@ -32,6 +32,13 @@ github:
   api:
     base-url: ${GITHUB_BASE_URL:https://api.github.com}
     token: ${GITHUB_TOKEN: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}
+    rate-limit:
+      # Default rate limit (requests per hour)
+      default-limit: 5000
+      # Default window duration in seconds
+      default-window-seconds: 3600
+      # Buffer percentage to keep available
+      buffer-percentage: 1
 
 # Swagger UI custom path
 springdoc:

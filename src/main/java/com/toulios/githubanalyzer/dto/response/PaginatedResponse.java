@@ -7,6 +7,10 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
 
+/**
+ * A response object that contains a paginated list of results.
+ * @param <T> the type of the results
+ */
 @Data
 @Builder
 public class PaginatedResponse<T> {
