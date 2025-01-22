@@ -3,6 +3,7 @@ package com.toulios.githubanalyzer.service;
 import com.toulios.githubanalyzer.dto.request.ObservedRepoFilter;
 import com.toulios.githubanalyzer.dto.request.ObservedRepoRequest;
 import com.toulios.githubanalyzer.dto.response.ObservedRepoResponse;
+import com.toulios.githubanalyzer.dto.response.PaginatedResponse;
 import com.toulios.githubanalyzer.exception.RepoCreationException;
 import com.toulios.githubanalyzer.exception.RepoNotFoundException;
 import com.toulios.githubanalyzer.model.ObservedRepo;
@@ -78,14 +79,17 @@ public class ObservedRepoCrudService {
      *
      * @param filter   filtering criteria
      * @param pageable pagination information
-     * @return filtered page of repositories
+     * @return filtered page of repositories with next/previous URLs
      */
-    public Page<ObservedRepoResponse> listAll(ObservedRepoFilter filter, Pageable pageable) {
+    public PaginatedResponse<ObservedRepoResponse> listAll(ObservedRepoFilter filter, Pageable pageable) {
         log.info("{} Fetching page {} of repositories with filters: {}",
                 LOG_PREFIX, pageable.getPageNumber(), filter);
 
         Specification<ObservedRepo> spec = ObservedRepoSpecification.withFilter(filter);
-        return repository.findAll(spec, pageable).map(ObservedRepoMapper::toResponse);
+        Page<ObservedRepoResponse> page = repository.findAll(spec, pageable)
+                .map(ObservedRepoMapper::toResponse);
+
+        return PaginatedResponse.from(page, "/api/v1/repos");
     }
 
     /**

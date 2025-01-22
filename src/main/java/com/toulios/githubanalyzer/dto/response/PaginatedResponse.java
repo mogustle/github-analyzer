@@ -18,6 +18,12 @@ public class PaginatedResponse<T> {
     private String previous;
     private List<T> results;
 
+    /**
+     * Creates a PaginatedResponse from a Page object.
+     * @param page the page to create the response from
+     * @param baseUrl the base URL for the API
+     * @return the PaginatedResponse
+     */
     public static <T> PaginatedResponse<T> from(Page<T> page, String baseUrl) {
         return PaginatedResponse.<T>builder()
                 .next(createNextPageUrl(page, baseUrl))
@@ -26,6 +32,12 @@ public class PaginatedResponse<T> {
                 .build();
     }
 
+    /**
+     * Creates the URL for the next page.
+     * @param page the page to create the URL for
+     * @param baseUrl the base URL for the API
+     * @return the URL for the next page
+     */
     private static <T> String createNextPageUrl(Page<T> page, String baseUrl) {
         if (!page.hasNext()) {
             return null;
@@ -37,6 +49,12 @@ public class PaginatedResponse<T> {
                 .toUriString();
     }
 
+    /**
+     * Creates the URL for the previous page.
+     * @param page the page to create the URL for
+     * @param baseUrl the base URL for the API
+     * @return the URL for the previous page
+     */
     private static <T> String createPreviousPageUrl(Page<T> page, String baseUrl) {
         if (!page.hasPrevious()) {
             return null;

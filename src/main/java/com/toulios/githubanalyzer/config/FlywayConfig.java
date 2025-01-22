@@ -1,5 +1,6 @@
 package com.toulios.githubanalyzer.config;
 
+import org.flywaydb.core.Flyway;
 import org.springframework.boot.autoconfigure.flyway.FlywayMigrationStrategy;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,9 +17,7 @@ public class FlywayConfig {
      */
     @Bean
     public FlywayMigrationStrategy flywayMigrationStrategy() {
-        return flyway -> {
-            // You can add custom migration logic here if needed
-            flyway.migrate();
-        };
+        // You can add custom migration logic here if needed
+        return Flyway::migrate;
     }
 } 

@@ -4,7 +4,7 @@ import com.toulios.githubanalyzer.config.ApiVersionConfig;
 import com.toulios.githubanalyzer.dto.request.ObservedRepoFilter;
 import com.toulios.githubanalyzer.dto.request.ObservedRepoRequest;
 import com.toulios.githubanalyzer.dto.response.ObservedRepoResponse;
-import com.toulios.githubanalyzer.dto.response.PageResponse;
+import com.toulios.githubanalyzer.dto.response.PaginatedResponse;
 import com.toulios.githubanalyzer.service.ObservedRepoCrudService;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.swagger.v3.oas.annotations.Operation;
@@ -88,7 +88,7 @@ public class ObservedRepoController {
             description = "Repositories retrieved successfully",
             content = @Content(
                     mediaType = "application/json",
-                    schema = @Schema(implementation = PageResponse.class)
+                    schema = @Schema(implementation = PaginatedResponse.class)
             )
     )
     @Parameters({
@@ -115,10 +115,10 @@ public class ObservedRepoController {
     })
     @GetMapping
     @RateLimiter(name = "observedRepoApi")
-    public ResponseEntity<PageResponse<ObservedRepoResponse>> listAll(
+    public ResponseEntity<PaginatedResponse<ObservedRepoResponse>> listAll(
             @Parameter(hidden = true) ObservedRepoFilter filter,
             @Parameter(description = "Pagination parameters") Pageable pageable) {
-        return ResponseEntity.ok(PageResponse.from(service.listAll(filter, pageable)));
+        return ResponseEntity.ok(service.listAll(filter, pageable));
     }
 
     @Operation(
