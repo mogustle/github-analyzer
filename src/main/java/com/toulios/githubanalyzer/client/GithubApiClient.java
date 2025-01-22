@@ -71,10 +71,10 @@ public class GithubApiClient {
                     new ParameterizedTypeReference<>() {
                     }
             );
-            
+
             // Log rate limit information
             logRateLimitInfo(response);
-            
+
             return Objects.requireNonNull(response.getBody());
         } catch (HttpClientErrorException.NotFound e) {
             log.error("Repository {}/{} not found", owner, repo, e);
@@ -84,7 +84,7 @@ public class GithubApiClient {
             throw new GithubAuthenticationException("Authentication failed for GitHub API: " + e.getMessage());
         } catch (HttpClientErrorException.TooManyRequests e) {
             // Enhanced rate limit exceeded logging
-            log.error("Rate limit exceeded while accessing repository {}/{}. Reset time: {}", 
+            log.error("Rate limit exceeded while accessing repository {}/{}. Reset time: {}",
                     owner, repo, getRateLimitResetTime(e.getResponseHeaders()), e);
             throw new GithubApiException("GitHub API rate limit exceeded. Please try again later.");
         } catch (HttpClientErrorException | HttpServerErrorException e) {
@@ -107,14 +107,14 @@ public class GithubApiClient {
 
         if (limit != null && remaining != null && reset != null) {
             String resetTime = formatResetTime(reset);
-            log.debug("GitHub API Rate Limit - Limit: {}, Remaining: {}, Resets at: {}", 
+            log.debug("GitHub API Rate Limit - Limit: {}, Remaining: {}, Resets at: {}",
                     limit, remaining, resetTime);
 
             // Warn if remaining requests are low (less than 10% of limit)
             int remainingRequests = Integer.parseInt(remaining);
             int rateLimit = Integer.parseInt(limit);
             if (remainingRequests < (rateLimit * 0.1)) {
-                log.warn("GitHub API Rate Limit is running low! Remaining: {} out of {}", 
+                log.warn("GitHub API Rate Limit is running low! Remaining: {} out of {}",
                         remaining, limit);
             }
         }
@@ -132,8 +132,11 @@ public class GithubApiClient {
     }
 
     private String getRateLimitResetTime(HttpHeaders headers) {
-        String reset = headers.getFirst(RATE_LIMIT_RESET_HEADER);
-        return reset != null ? formatResetTime(reset) : "unknown";
+        if (headers != null) {
+            String reset = headers.getFirst(RATE_LIMIT_RESET_HEADER);
+            return reset != null ? formatResetTime(reset) : "unknown";
+        }
+        return "unknown";
     }
 
     private HttpEntity<?> createHeaders() {
