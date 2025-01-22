@@ -73,17 +73,48 @@ The application implements smart rate limiting to prevent exceeding GitHub's API
 
 ## Quick Start
 
+1. Clone repository
 ```bash
-# Clone repository
 git clone https://github.com/mogustle/github-analyzer.git
 cd github-analyzer
+```
 
-# Build application
+2. Configure environment variables
+```bash
+# Copy example environment file
+cp .env.example .env.local
+
+# Edit .env.local with your local values
+vim .env.local
+
+# Source environment variables
+source .env.local
+```
+
+3. Build application
+```bash
 mvn clean package -DskipTests
+```
 
-# Start services
+4. Start services
+```bash
 docker-compose up -d
+```
 
-# Run application
+5. Run application
+```bash
 mvn spring-boot:run
 ```
+
+### Environment Variables
+
+The application requires several environment variables to be set. These include:
+- Database credentials
+- GitHub API token
+- Rate limiting configurations
+- Flyway settings
+
+See `.env.example` for a complete list of required variables and their format.
+
+> **Note**: Never commit `.env.local` to version control as it may contain sensitive information.
+> Environment variable `GITHUB_TOKEN` is MANDATORY to be set locally due to security issues
