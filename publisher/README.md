@@ -72,6 +72,54 @@ The application implements smart rate limiting to prevent exceeding GitHub's API
 |-------|---------|
 | observed_repo | • idx_repo_owner<br>• idx_repo_licence<br>• idx_repo_status<br>• idx_repo_owner_name |
 
+## Messaging
+
+### Kafka Integration
+The service publishes repository change events to Kafka when repository data is updated. These events are consumed by the consumer service for further analysis.
+
+#### Event Format
+```json
+{
+    "repoId": 123,
+    "changes": "Repository changes for id 123:\n - Stars: 100 → 150\n - Forks: 20 → 25",
+    "timestamp": "2024-03-21T10:15:30"
+}
+```
+
+#### Configuration
+Kafka configuration can be customized through application.yml or environment variables:
+```yaml
+spring:
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+app:
+  kafka:
+    topics:
+      repo-changes: ${KAFKA_TOPIC_REPO_CHANGES:repo-changes}
+```
+
+#### Environment Variables
+| Variable | Description | Default |
+|----------|-------------|---------|
+| KAFKA_TOPIC_REPO_CHANGES | Topic name for repository change events | repo-changes |
+
+#### Message Flow
+1. Repository update is detected
+2. Changes are captured and formatted
+3. Event is created with change details
+4. Event is published to configured Kafka topic
+5. Consumer service processes the event
+
+#### Example Usage
+```java
+// Automatically publishes changes when repository is updated
+messageService.sendChangeEvent(topic, repoId, changes);
+```
+
 ## Quick Start
 
 1. Clone repository

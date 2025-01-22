@@ -2,6 +2,7 @@ package com.toulios.githubanalyzer.repository.specification;
 
 import com.toulios.githubanalyzer.dto.request.ObservedRepoFilter;
 import com.toulios.githubanalyzer.model.ObservedRepo;
+import com.toulios.githubanalyzer.model.ObservedRepoStatus;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
 
@@ -20,7 +21,7 @@ public class ObservedRepoSpecification {
         return Specification
                 .where(hasOwner(filter.getOwner()))
                 .and(hasName(filter.getName()))
-                .and(hasStatus(filter.getStatus().toString()))
+                .and(hasStatus(filter.getStatus()))
                 .and(hasLicence(filter.getLicence()));
     }
 
@@ -60,9 +61,9 @@ public class ObservedRepoSpecification {
      * @param status the status to filter by
      * @return the specification
      */
-    private static Specification<ObservedRepo> hasStatus(String status) {
+    private static Specification<ObservedRepo> hasStatus(ObservedRepoStatus status) {
         return (root, query, cb) -> {
-            if (!StringUtils.hasText(status)) {
+            if (status == null) {
                 return null;
             }
             return cb.equal(root.get("status"), status);
