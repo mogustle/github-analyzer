@@ -12,12 +12,15 @@ spring:
       hibernate:
         format_sql: true
         dialect: ${SPRING_JPA_DIALECT:org.hibernate.dialect.PostgreSQLDialect}
+        
   logging:
     level:
       org.hibernate: ERROR
       org.hibernate.SQL: OFF
       org.hibernate.type.descriptor.sql: OFF
       com.toulios.githubanalyzer: DEBUG 
+      org.apache.kafka.clients.producer.ProducerConfig: OFF 
+      org.apache.kafka.clients: ERROR
 
   flyway:
     enabled: ${FLYWAY_ENABLED:true}
@@ -34,8 +37,6 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-    topics:
-      repo-changes: ${KAFKA_TOPIC_REPO_CHANGES:repo-changes}  # default value if not overridden
 
 github:
   api:
@@ -61,6 +62,10 @@ springdoc:
 app:
   scheduler:
     fixed-rate: ${SCHEDULER_RATE:300000}  # 5 minutes in milliseconds
+  kafka:
+    topics:
+      repo-changes: ${KAFKA_TOPIC_REPO_CHANGES:repo-changes}  # default value if not overridden
+
 
 resilience4j:
   ratelimiter:

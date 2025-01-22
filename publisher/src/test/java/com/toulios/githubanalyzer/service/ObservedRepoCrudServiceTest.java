@@ -1,5 +1,6 @@
 package com.toulios.githubanalyzer.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.toulios.githubanalyzer.dto.request.ObservedRepoFilter;
 import com.toulios.githubanalyzer.dto.request.ObservedRepoRequest;
 import com.toulios.githubanalyzer.dto.request.ObservedRepoUpdateRequest;
@@ -16,12 +17,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.openapitools.jackson.nullable.JsonNullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.openapitools.jackson.nullable.JsonNullable;
 
 import java.util.Collections;
 import java.util.Optional;
@@ -38,6 +39,9 @@ class ObservedRepoCrudServiceTest {
 
     @Mock
     private MessageService messageService;
+
+    @Mock
+    private ObservedRepoHelper observedRepoHelper;
 
     @InjectMocks
     private ObservedRepoCrudService service;
@@ -118,7 +122,7 @@ class ObservedRepoCrudServiceTest {
                 .build();
         filter.setStatus(ObservedRepoStatus.ACTIVE);  // Set a non-null status
         filter.setOwner("test-owner");  // Optionally set other filter fields
-        
+
         Page<ObservedRepo> page = new PageImpl<>(Collections.singletonList(testRepo));
         when(repository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(page);
 
@@ -137,7 +141,7 @@ class ObservedRepoCrudServiceTest {
         // Create a filter with null values
         ObservedRepoFilter filter = ObservedRepoFilter.builder().build();
         // Don't set any filter values - leave them null
-        
+
         Page<ObservedRepo> page = new PageImpl<>(Collections.singletonList(testRepo));
         when(repository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(page);
 
@@ -157,13 +161,13 @@ class ObservedRepoCrudServiceTest {
 
         service.deleteById(1L);
 
-        verify(repository).save(argThat(repo -> 
-            repo.getStatus() == ObservedRepoStatus.DELETED
+        verify(repository).save(argThat(repo ->
+                repo.getStatus() == ObservedRepoStatus.DELETED
         ));
     }
 
     @Test
-    void update_WhenRepoExists_ShouldUpdateAndNotifyChanges() {
+    void update_WhenRepoExists_ShouldUpdateAndNotifyChanges() throws JsonProcessingException {
         when(repository.findById(1L)).thenReturn(Optional.of(testRepo));
         when(repository.save(any(ObservedRepo.class))).thenReturn(testRepo);
 
@@ -175,7 +179,7 @@ class ObservedRepoCrudServiceTest {
 
         assertNotNull(response);
         verify(repository).save(any(ObservedRepo.class));
-        verify(messageService).sendChangeEvent(any(), eq(1L), anyString());
+        verify(observedRepoHelper).handleChanges(any(), any());
     }
 
     @Test

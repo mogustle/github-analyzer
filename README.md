@@ -46,11 +46,13 @@ docker compose up -d
 
 ### 2. Run the publisher:
 ```bash
+mvn clean install -pl publisher
 mvn spring-boot:run -pl publisher
 ```
 
 ### 3. Run the consumer:
 ```bash
+mvn clean install -pl consumer
 mvn spring-boot:run -pl consumer
 ```
 

@@ -1,7 +1,6 @@
 package com.toulios.consumer.listener;
 
 import com.toulios.consumer.config.KafkaTestConfig;
-import com.toulios.consumer.event.RepoChangeEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +25,7 @@ class RepoChangeListenerIntegrationTest {
     private static final String TOPIC = "repo-changes";
 
     @Autowired
-    private KafkaTemplate<String, RepoChangeEvent> kafkaTemplate;
+    private KafkaTemplate<String, String> kafkaTemplate;
 
     @BeforeEach
     void setUp() {
@@ -36,13 +35,10 @@ class RepoChangeListenerIntegrationTest {
     @Test
     void whenSendingMessage_thenMessageIsReceived() {
         // Given
-        RepoChangeEvent event = RepoChangeEvent.builder()
-                .repoId(1L)
-                .changes("changes")
-                .build();
+
 
         // When
-        kafkaTemplate.send(TOPIC, event);
+        kafkaTemplate.send(TOPIC, "{}");
 
         // Then
         await()

@@ -1,6 +1,5 @@
 package com.toulios.consumer.listener;
 
-import com.toulios.consumer.event.RepoChangeEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,12 +22,7 @@ class RepoChangeListenerTest {
     @Test
     void handleRepoChange_ShouldProcessEventSuccessfully() {
         // Given
-        RepoChangeEvent event = RepoChangeEvent.builder()
-                .repoId(1L)
-                .changes("changes updated")
-                .build();
-
         // When & Then
-        assertDoesNotThrow(() -> repoChangeListener.handleRepoChange(event));
+        assertDoesNotThrow(() -> repoChangeListener.handleRepoChange("event"));
     }
 } 

@@ -1,5 +1,7 @@
 package com.toulios.githubanalyzer.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.toulios.githubanalyzer.event.RepoChangeEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,8 +18,8 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class MessageService {
     private static final String LOG_PREFIX = "[MessageService]";
-
-    private final KafkaTemplate<String, RepoChangeEvent> kafkaTemplate;
+    private final ObjectMapper objectMapper;
+    private final KafkaTemplate<String, String> kafkaTemplate;
 
     /**
      * Sends a repository change event to Kafka.
@@ -25,7 +27,7 @@ public class MessageService {
      * @param repoId ID of the repository that changed
      * @param changes description of the changes
      */
-    public void sendChangeEvent(String topic, Long repoId, String changes) {
+    public void sendChangeEvent(String topic, Long repoId, String changes) throws JsonProcessingException {
         RepoChangeEvent event = new RepoChangeEvent(
             repoId,
             changes,
@@ -33,7 +35,7 @@ public class MessageService {
         );
 
         // Send message to Kafka
-        kafkaTemplate.send(topic, repoId.toString(), event)
+        kafkaTemplate.send(topic, repoId.toString(), objectMapper.writeValueAsString(event))
             .whenComplete((result, ex) -> {
                 if (ex == null) {
                     log.info("{} Successfully sent change event for repository id: {}", 

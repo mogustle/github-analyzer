@@ -1,6 +1,5 @@
 package com.toulios.consumer.config;
 
-import com.toulios.consumer.event.RepoChangeEvent;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -28,7 +27,7 @@ public class KafkaTestConfig {
      * @return a new instance of DefaultKafkaProducerFactory
      */
     @Bean
-    public ProducerFactory<String, RepoChangeEvent> producerFactory() {
+    public ProducerFactory<String, String> producerFactory() {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
@@ -42,7 +41,7 @@ public class KafkaTestConfig {
      * @return a new instance of KafkaTemplate
      */
     @Bean
-    public KafkaTemplate<String, RepoChangeEvent> kafkaTemplate() {
+    public KafkaTemplate<String, String> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
     }
 
@@ -52,7 +51,7 @@ public class KafkaTestConfig {
      * @return a new instance of DefaultKafkaConsumerFactory
      */
     @Bean
-    public ConsumerFactory<String, RepoChangeEvent> consumerFactory() {
+    public ConsumerFactory<String, String> consumerFactory() {
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         props.put(ConsumerConfig.GROUP_ID_CONFIG, "test-group");
@@ -68,9 +67,9 @@ public class KafkaTestConfig {
      * @return a new instance of ConcurrentKafkaListenerContainerFactory
      */
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, RepoChangeEvent> 
+    public ConcurrentKafkaListenerContainerFactory<String, String>
             kafkaListenerContainerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, RepoChangeEvent> factory =
+        ConcurrentKafkaListenerContainerFactory<String, String> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
         return factory;

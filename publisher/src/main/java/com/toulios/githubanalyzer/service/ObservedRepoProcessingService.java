@@ -1,6 +1,7 @@
 package com.toulios.githubanalyzer.service;
 
 import com.toulios.githubanalyzer.client.GithubApiClient;
+import com.toulios.githubanalyzer.dto.GithubRepositoryDto;
 import com.toulios.githubanalyzer.dto.request.ObservedRepoFilter;
 import com.toulios.githubanalyzer.model.ObservedRepo;
 import com.toulios.githubanalyzer.model.ObservedRepoStatus;
@@ -17,7 +18,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Service responsible for managing and processing GitHub repositories stored in the database.
@@ -36,6 +36,7 @@ public class ObservedRepoProcessingService {
 
     private final GithubApiClient githubApiClient;
     private final ObservedRepoRepository observedRepoRepository;
+    private final ObservedRepoHelper observedRepoHelper;
 
     /**
      * Processes all repositories stored in the database in a paginated manner.
@@ -102,20 +103,19 @@ public class ObservedRepoProcessingService {
     private void processRepository(ObservedRepo repo, List<ObservedRepo> repos) {
         try {
             log.info("{} Processing repository: {}/{}", LOG_PREFIX, repo.getOwner(), repo.getName());
-            Optional.ofNullable(githubApiClient.getRepositoryDetails(repo.getOwner(), repo.getName()))
-                    .map(githubRepo -> ObservedRepoMapper.toEntity(githubRepo, repo.getId()))
-                    .ifPresentOrElse(
-                            repos::add,
-                            () -> {
-                                repo.setStatus(ObservedRepoStatus.INVALID);
-                                repos.add(repo);
-                            }
-                    );
+            GithubRepositoryDto githubRepo = githubApiClient.getRepositoryDetails(repo.getOwner(), repo.getName());
+            if (githubRepo == null) {
+                repo.setStatus(ObservedRepoStatus.INVALID);
+                repos.add(repo);
+                return;
+            }
+
+            ObservedRepo updatedRepo = ObservedRepoMapper.toEntity(githubRepo, repo.getId());
+            repos.add(updatedRepo);
+
+            observedRepoHelper.handleChanges(repo, updatedRepo);
         } catch (Exception e) {
             log.error("{} Error processing repository {}/{}: {}", LOG_PREFIX, repo.getOwner(), repo.getName(), e.getMessage(), e);
-            // Consider adding metrics here to track failed repositories
-            repo.setStatus(ObservedRepoStatus.INVALID);
-            observedRepoRepository.save(repo);
         }
     }
 

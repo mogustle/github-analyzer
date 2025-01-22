@@ -23,9 +23,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 class ObservedRepoProcessingServiceTest {
@@ -35,6 +35,9 @@ class ObservedRepoProcessingServiceTest {
 
     @Mock
     private ObservedRepoRepository observedRepoRepository;
+
+    @Mock
+    private ObservedRepoHelper observedRepoHelper;
 
     @InjectMocks
     private ObservedRepoProcessingService service;
@@ -49,6 +52,7 @@ class ObservedRepoProcessingServiceTest {
 
     private OwnerDto ownerDto1;
     private OwnerDto ownerDto2;
+
     @BeforeEach
     void setUp() {
         testRepo1 = new ObservedRepo();
@@ -83,7 +87,7 @@ class ObservedRepoProcessingServiceTest {
         // Arrange
         Page<ObservedRepo> emptyPage = new PageImpl<>(Collections.emptyList());
         when(observedRepoRepository.findAll(any(Specification.class), any(Pageable.class)))
-            .thenReturn(emptyPage);
+                .thenReturn(emptyPage);
 
         // Act
         service.processObservedRepos();
@@ -99,9 +103,9 @@ class ObservedRepoProcessingServiceTest {
         List<ObservedRepo> repos = Arrays.asList(testRepo1, testRepo2);
         Page<ObservedRepo> page = new PageImpl<>(repos);
         when(observedRepoRepository.findAll(any(Specification.class), any(Pageable.class)))
-            .thenReturn(page)
-            .thenReturn(new PageImpl<>(Collections.emptyList()));
-        
+                .thenReturn(page)
+                .thenReturn(new PageImpl<>(Collections.emptyList()));
+
         when(githubApiClient.getRepositoryDetails("owner1", "repo1")).thenReturn(githubRepo1);
         when(githubApiClient.getRepositoryDetails("owner2", "repo2")).thenReturn(githubRepo2);
 
@@ -113,7 +117,7 @@ class ObservedRepoProcessingServiceTest {
         verify(githubApiClient).getRepositoryDetails("owner1", "repo1");
         verify(githubApiClient).getRepositoryDetails("owner2", "repo2");
         verify(observedRepoRepository).saveAll(reposCaptor.capture());
-        
+
         List<ObservedRepo> savedRepos = reposCaptor.getValue();
         assertEquals(2, savedRepos.size());
         assertEquals(ObservedRepoStatus.ACTIVE, savedRepos.get(0).getStatus());
@@ -125,9 +129,9 @@ class ObservedRepoProcessingServiceTest {
         // Arrange
         Page<ObservedRepo> page = new PageImpl<>(Collections.singletonList(testRepo1));
         when(observedRepoRepository.findAll(any(Specification.class), any(Pageable.class)))
-            .thenReturn(page)
-            .thenReturn(new PageImpl<>(Collections.emptyList()));
-        
+                .thenReturn(page)
+                .thenReturn(new PageImpl<>(Collections.emptyList()));
+
         when(githubApiClient.getRepositoryDetails("owner1", "repo1")).thenReturn(null);
 
         // Act
@@ -145,19 +149,40 @@ class ObservedRepoProcessingServiceTest {
         // Arrange
         Page<ObservedRepo> page = new PageImpl<>(Collections.singletonList(testRepo1));
         when(observedRepoRepository.findAll(any(Specification.class), any(Pageable.class)))
-            .thenReturn(page)
-            .thenReturn(new PageImpl<>(Collections.emptyList()));
-        
+                .thenReturn(page)
+                .thenReturn(new PageImpl<>(Collections.emptyList()));
+
         when(githubApiClient.getRepositoryDetails("owner1", "repo1"))
-            .thenThrow(new RuntimeException("API Error"));
+                .thenThrow(new RuntimeException("API Error"));
 
         // Act
         service.processObservedRepos();
 
         // Assert
-        verify(observedRepoRepository).save(any(ObservedRepo.class));
-        ArgumentCaptor<ObservedRepo> repoCaptor = ArgumentCaptor.forClass(ObservedRepo.class);
-        verify(observedRepoRepository).save(repoCaptor.capture());
-        assertEquals(ObservedRepoStatus.INVALID, repoCaptor.getValue().getStatus());
+        verify(observedRepoHelper, never()).handleChanges(any(), any());
+    }
+
+    @Test
+    void processObservedRepos_WhenRepogetsUpdated_ShouldSendAnEvent() {
+        // given
+        Page<ObservedRepo> page = new PageImpl<>(Collections.singletonList(testRepo1));
+        when(observedRepoRepository.findAll(any(Specification.class), any(Pageable.class)))
+                .thenReturn(page)
+                .thenReturn(new PageImpl<>(Collections.emptyList()));
+
+        when(githubApiClient.getRepositoryDetails("owner1", "repo1")).thenReturn(githubRepo1);
+
+        ObservedRepo updatedRepo = new ObservedRepo();
+        updatedRepo.setId(1L);
+        updatedRepo.setOwner("owner1");
+        updatedRepo.setName("repo1");
+        updatedRepo.setStatus(ObservedRepoStatus.ACTIVE);
+        updatedRepo.setStars(100);
+
+        // when
+        service.processObservedRepos();
+
+        // then
+        verify(observedRepoHelper).handleChanges(any(), any());
     }
 } 

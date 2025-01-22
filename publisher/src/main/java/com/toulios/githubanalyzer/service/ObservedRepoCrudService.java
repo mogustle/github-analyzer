@@ -5,7 +5,6 @@ import com.toulios.githubanalyzer.dto.request.ObservedRepoRequest;
 import com.toulios.githubanalyzer.dto.request.ObservedRepoUpdateRequest;
 import com.toulios.githubanalyzer.dto.response.ObservedRepoResponse;
 import com.toulios.githubanalyzer.dto.response.PaginatedResponse;
-import com.toulios.githubanalyzer.event.RepoChangeEvent;
 import com.toulios.githubanalyzer.exception.RepoCreationException;
 import com.toulios.githubanalyzer.exception.RepoNotFoundException;
 import com.toulios.githubanalyzer.model.ObservedRepo;
@@ -16,15 +15,12 @@ import com.toulios.githubanalyzer.util.JsonNullableUtils;
 import com.toulios.githubanalyzer.util.ObservedRepoMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -37,10 +33,7 @@ public class ObservedRepoCrudService {
     private static final String LOG_PREFIX = "[ObservedRepoCrudService]";
 
     private final ObservedRepoRepository repository;
-    private final MessageService messageService;
-
-    @Value("${app.kafka.topics.repo-changes}")
-    private String repoChangesTopic;
+    private final ObservedRepoHelper observedRepoHelper;
 
     /**
      * Creates or updates a repository based on owner and name.
@@ -152,7 +145,7 @@ public class ObservedRepoCrudService {
         ObservedRepo updatedRepo = repository.save(existingRepo);
 
         // Handle changes
-        handleChanges(oldValues, updatedRepo);
+        observedRepoHelper.handleChanges(oldValues, updatedRepo);
 
         log.info("{} Successfully updated repository with id: {}", LOG_PREFIX, id);
         return ObservedRepoMapper.toResponse(updatedRepo);
@@ -172,44 +165,5 @@ public class ObservedRepoCrudService {
         JsonNullableUtils.updateIfPresent(request.getUrl(), repo::setUrl);
         JsonNullableUtils.updateIfPresent(request.getStatus(), repo::setStatus);
         JsonNullableUtils.updateIfPresent(request.getLicence(), repo::setLicence);
-    }
-
-    /**
-     * Handles changes in a repository and sends a message to Kafka if there are any changes.
-     *
-     * @param oldValues the old repository values
-     * @param newValues the new repository values
-     */ 
-    private void handleChanges(ObservedRepo oldValues, ObservedRepo newValues) {
-        StringBuilder changes = new StringBuilder();
-        changes.append("\nRepository changes for id ").append(newValues.getId()).append(":");
-
-        if (!Objects.equals(oldValues.getName(), newValues.getName())) {
-            changes.append("\n - Name: ").append(oldValues.getName()).append(" → ").append(newValues.getName());
-        }
-        if (!Objects.equals(oldValues.getOwner(), newValues.getOwner())) {
-            changes.append("\n - Owner: ").append(oldValues.getOwner()).append(" → ").append(newValues.getOwner());
-        }
-        if (!Objects.equals(oldValues.getStars(), newValues.getStars())) {
-            changes.append("\n - Stars: ").append(oldValues.getStars()).append(" → ").append(newValues.getStars());
-        }
-        if (!Objects.equals(oldValues.getOpenIssues(), newValues.getOpenIssues())) {
-            changes.append("\n - Forks: ").append(oldValues.getOpenIssues()).append(" → ").append(newValues.getOpenIssues());
-        }
-        if (!Objects.equals(oldValues.getUrl(), newValues.getUrl())) {
-            changes.append("\n - URL: ").append(oldValues.getUrl()).append(" → ").append(newValues.getUrl());
-        }
-        if (!Objects.equals(oldValues.getStatus(), newValues.getStatus())) {
-            changes.append("\n - Status: ").append(oldValues.getStatus()).append(" → ").append(newValues.getStatus());
-        }
-        if (!Objects.equals(oldValues.getLicence(), newValues.getLicence())) {
-            changes.append("\n - Licence: ").append(oldValues.getLicence()).append(" → ").append(newValues.getLicence());
-        }
-
-        if (changes.isEmpty()) {
-            log.info("{} No changes detected for repository id: {}", LOG_PREFIX, newValues.getId());
-            return;
-        }
-        messageService.sendChangeEvent(repoChangesTopic, newValues.getId(), changes.toString());
     }
 } 
