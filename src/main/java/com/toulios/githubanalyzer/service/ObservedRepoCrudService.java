@@ -2,6 +2,7 @@ package com.toulios.githubanalyzer.service;
 
 import com.toulios.githubanalyzer.dto.request.ObservedRepoFilter;
 import com.toulios.githubanalyzer.dto.request.ObservedRepoRequest;
+import com.toulios.githubanalyzer.dto.request.ObservedRepoUpdateRequest;
 import com.toulios.githubanalyzer.dto.response.ObservedRepoResponse;
 import com.toulios.githubanalyzer.dto.response.PaginatedResponse;
 import com.toulios.githubanalyzer.exception.RepoCreationException;
@@ -10,6 +11,7 @@ import com.toulios.githubanalyzer.model.ObservedRepo;
 import com.toulios.githubanalyzer.model.ObservedRepoStatus;
 import com.toulios.githubanalyzer.repository.ObservedRepoRepository;
 import com.toulios.githubanalyzer.repository.specification.ObservedRepoSpecification;
+import com.toulios.githubanalyzer.util.JsonNullableUtils;
 import com.toulios.githubanalyzer.util.ObservedRepoMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -109,5 +111,43 @@ public class ObservedRepoCrudService {
         repository.save(repo);
 
         log.info("{} Successfully marked repository as deleted with id: {}", LOG_PREFIX, id);
+    }
+
+    /**
+     * Updates a repository with the given data.
+     * Only updates fields that are present in the request.
+     *
+     * @param id the ID of the repository to update
+     * @param request the update data
+     * @return the updated repository
+     * @throws RepoNotFoundException if the repository is not found
+     */
+    @Transactional
+    public ObservedRepoResponse update(Long id, ObservedRepoUpdateRequest request) {
+        log.info("{} Updating repository with id: {}", LOG_PREFIX, id);
+        
+        ObservedRepo repo = repository.findById(id)
+                .orElseThrow(() -> new RepoNotFoundException("Repository not found with id: " + id));
+
+        updateRepoFromRequest(repo, request);
+        repo = repository.save(repo);
+        
+        log.info("{} Successfully updated repository with id: {}", LOG_PREFIX, id);
+        return ObservedRepoMapper.toResponse(repo);
+    }
+
+    /**
+     * Updates a repository from an ObservedRepoUpdateRequest.
+     * @param repo the repository to update
+     * @param request the update request
+     */ 
+    private void updateRepoFromRequest(ObservedRepo repo, ObservedRepoUpdateRequest request) {
+        JsonNullableUtils.updateIfPresent(request.getName(), repo::setName);
+        JsonNullableUtils.updateIfPresent(request.getOwner(), repo::setOwner);
+        JsonNullableUtils.updateIfPresent(request.getStars(), repo::setStars);
+        JsonNullableUtils.updateIfPresent(request.getOpenIssues(), repo::setOpenIssues);
+        JsonNullableUtils.updateIfPresent(request.getUrl(), repo::setUrl);
+        JsonNullableUtils.updateIfPresent(request.getStatus(), repo::setStatus);
+        JsonNullableUtils.updateIfPresent(request.getLicence(), repo::setLicence);
     }
 } 

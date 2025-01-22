@@ -46,6 +46,7 @@ The application implements smart rate limiting to prevent exceeding GitHub's API
 | POST | `/` | Create or update a repository | N/A |
 | GET | `/` | List all repositories | `owner`, `name`, `status`, `licence`, `page`, `size` |
 | GET | `/{id}` | Get repository by ID | N/A |
+| PUT | `/{id}` | Update repository | N/A |
 | DELETE | `/{id}` | Delete repository by ID | N/A |
 
 #### Filtering Parameters

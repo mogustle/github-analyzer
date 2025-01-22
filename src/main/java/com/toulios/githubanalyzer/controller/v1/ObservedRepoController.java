@@ -1,8 +1,9 @@
-package com.toulios.githubanalyzer.controller;
+package com.toulios.githubanalyzer.controller.v1;
 
 import com.toulios.githubanalyzer.config.ApiVersionConfig;
 import com.toulios.githubanalyzer.dto.request.ObservedRepoFilter;
 import com.toulios.githubanalyzer.dto.request.ObservedRepoRequest;
+import com.toulios.githubanalyzer.dto.request.ObservedRepoUpdateRequest;
 import com.toulios.githubanalyzer.dto.response.ObservedRepoResponse;
 import com.toulios.githubanalyzer.dto.response.PaginatedResponse;
 import com.toulios.githubanalyzer.service.ObservedRepoCrudService;
@@ -141,5 +142,30 @@ public class ObservedRepoController {
             @Parameter(description = "Repository ID") @PathVariable Long id) {
         service.deleteById(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}")
+    @Operation(
+            summary = "Update repository",
+            description = "Updates an existing repository. Only updates fields that are present in the request."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Repository updated successfully",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ObservedRepoResponse.class)
+            )
+    )
+    @ApiResponse(
+            responseCode = "404",
+            description = "Repository not found",
+            content = @Content
+    )
+    @RateLimiter(name = "observedRepoApi")
+    public ResponseEntity<ObservedRepoResponse> update(
+            @Parameter(description = "Repository ID") @PathVariable Long id,
+            @Valid @RequestBody ObservedRepoUpdateRequest request) {
+        return ResponseEntity.ok(service.update(id, request));
     }
 } 
